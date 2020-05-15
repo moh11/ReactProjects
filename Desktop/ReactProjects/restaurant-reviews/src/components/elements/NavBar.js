@@ -1,17 +1,17 @@
-import React from "react";
 import "./styles/Navbar.css";
-import { useSelector } from "react-redux";
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { withRouter } from "react-router-dom";
 import { Menu } from "antd";
-import { USER_SERVER } from "../Config";
-import axios from "axios";
+import { logoutUser } from "../../state/authActions.js";
 
 function NavBar(props) {
-  const user = useSelector(state => state.user);
+  const userData = useSelector(state => state.userData);
+  const dispatch = useDispatch();
 
   const logoutHandler = () => {
-    axios.get(`${USER_SERVER}/logout`).then(response => {
-      if (response.status === 200) {
+    dispatch(logoutUser()).then(response => {
+      if (!response.isAuth) {
         props.history.push("/login");
       } else {
         alert("Log Out Failed");
@@ -19,7 +19,7 @@ function NavBar(props) {
     });
   };
 
-  if (true) {
+  if (!userData || !userData.isAuth) {
     return (
       <div className="menu__container">
         <div className="menu_right">
@@ -29,9 +29,6 @@ function NavBar(props) {
             </Menu.Item>
             <Menu.Item key="app">
               <a href="/register">Register</a>
-            </Menu.Item>
-            <Menu.Item key="vile">
-              <a href="/registerasowner">Register As Owner</a>
             </Menu.Item>
           </Menu>
         </div>

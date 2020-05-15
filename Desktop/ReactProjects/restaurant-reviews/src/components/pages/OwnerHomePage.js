@@ -6,7 +6,10 @@ import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
 import Typography from "@material-ui/core/Typography";
 import Box from "@material-ui/core/Box";
-import RestaurantList from "./list/RestaurantList";
+import RestaurantList from "../compounds/RestaurantList";
+import { API } from "../../utils/config";
+import  ReviewAndReplyList from "../compounds/ReviewAndReplyList";
+import CreateRestaurant from "../compounds/CreateRestaurant";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -40,6 +43,7 @@ function LinkTab(props) {
       component="a"
       onClick={event => {
         event.preventDefault();
+        props.onClick();
       }}
       {...props}
     />
@@ -53,15 +57,61 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export default function NavTabs() {
-  const classes = useStyles();
-  const [value, setValue] = React.useState(0);
+export default class OwnerHomePage extends React.Component {
+  constructor() {
+    this.state = {
+      pendingReviews: [],
+      ownedRestaurants: []
+    }
+    this.handlePostReply = this.handlePostReply.bind(this);
+    this.handleOwnedRestaurantTabClick = this.handleOwnedRestaurantTabClick.bind(this);
+    this.handlePendingRepliesTabClick = this.handlePendingRepliesTabClick.bind(this);
+  }
 
-  const handleChange = (event, newValue) => {
-    setValue(newValue);
-  };
+  componentDidMount() {
+    fetchOwnedRestaurantList();
+  }
 
-  return (
+  fetchOwnedRestaurantList() {
+    axios.get(API.FETCH_OWNED_RESTAURANTS_URL).then(response => {
+      if(response.data) {
+        this.setState = {
+          restaurants: response.data.restaurants
+        };
+      }
+    });
+  }
+
+  fetchPendingReviewsList() {
+    axios.get(API.FETCH_REVIEWS_WITH_PENDING_REPLIES_URL).then(response => {
+      if(response.data) {
+        this.setState = {
+          restaurants: response.data.restaurants
+        };
+      }
+    });
+  }
+
+  handlePostReply(reply) {
+    await axios.post(API.POST_REPLY, reply).then(response => {
+      if(response.data && response.data.success) {
+        this.fetchPendingReviewsList()
+      } else {
+        alert("Posting reply unsuccessful");
+      }
+    });
+  }
+
+  handleOwnedRestaurantTabClick() {
+    this.fetchOwnedRestaurantList();
+  }
+
+  handlePendingRepliesTabClick() {
+    this.fetchPendingReviewsList();
+  }
+
+  render() {
+    return (
     <div className={classes.root}>
       <AppBar position="static">
         <Tabs
@@ -70,16 +120,20 @@ export default function NavTabs() {
           onChange={handleChange}
           aria-label="Tabs for owner"
         >
-          <LinkTab label="View Your Restaurants" />
-          <LinkTab label="Replies pending for left comments" />
+          <LinkTab label="View Your Restaurants" onClick={this.handleOwnedRestaurantTabClick}/>
+          <LinkTab label="Replies pending for left comments" onClick={this.handlePendingRepliesTabClick}/>
         </Tabs>
       </AppBar>
       <TabPanel value={value} index={0}>
-        <RestaurantList />
+        <RestaurantList restaurants={restaurants}/>
       </TabPanel>
       <TabPanel value={value} index={1}>
-        <Crea>
+        <ReviewAndReplyList reviews={pendingReviews} showReplied={false} handlePostReply={this.handlePostReply}/>
+      </TabPanel>
+      <TabPanel value={value} index={1}>
+        <CreateRestaurant />
       </TabPanel>
     </div>
-  );
+    );
+  }
 }

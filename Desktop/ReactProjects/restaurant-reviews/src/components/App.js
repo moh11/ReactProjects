@@ -1,17 +1,12 @@
 import React from "react";
 import { Route, Switch } from "react-router-dom";
-import Auth from "../hoc/auth";
-// pages for this product
-// import LandingPage from "./views/LandingPage/LandingPage.js";
-// import SignUp from "./start/Signup.js";
-// import Login from "./start/Login.js";
+import { PrivateRoute, PrivateUserRoute, PrivateOwnerRoute, PrivateAdminRoute } from "../middleware/privateRoutes.js"; 
 import NavBar from "./elements/NavBar.js";
-import RestaurantList from "./home/list/RestaurantList.js";
-import RegisterPage from "./pages/RegisterPage/RegisterPage.js";
-// import MovieDetail from "./views/MovieDetail/MovieDetail";
-// import FavoritePage from "./views/FavoritePage/FavoritePage";
-// import SignUpAsOwner from "./start/SignupAsOwner";
-// import OwnerHome from "./home/OwnerHome";
+import RegisterPage from "./pages/RegisterPage.js";
+import LoginPage from "./pages/LoginPage.js";
+import UserHomePage from "./pages/UserHomePage.js";
+import OwnerHomePage from "./pages/OwnerHomePage.js";
+import RestaurantDetailPage from "./pages/RestaurantDetailPage.js";
 
 function App() {
   const restaurants = [
@@ -30,13 +25,16 @@ function App() {
   return (
     <div className="app">
       <NavBar />
+      <div style={{ paddingTop: '69px', minHeight: 'calc(100vh - 80px)' }}>
       <Switch>
-        <Route
-          exact
-          path="/"
-          component={() => <RestaurantList restaurants={restaurants} />}
-        />
+        <Route exact path="/" component={RegisterPage} />
+        <Route exact path="/register" component={RegisterPage} />
+        <Route exact path="/login" component={LoginPage} />
+        <PrivateUserRoute exact path="/home/user" component={UserHomePage} />
+        <PrivateOwnerRoute exact path="/home/owner" component={OwnerHomePage} />
+        <PrivateRoute exact path="/restaurant/details" component={RestaurantDetailPage} />
       </Switch>
+      </div>
     </div>
   );
 }

@@ -2,12 +2,13 @@ import "antd/dist/antd.css";
 import React from "react";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import axios from "axios";
 import { API } from "../../../utils/config.js";
+import { registerUser } from "../../state/authActions.js";
 import { Form, Input, Button } from "antd";
 import { makeStyles } from "@material-ui/core/styles";
 import MenuItem from "@material-ui/core/MenuItem";
 import Select from "@material-ui/core/Select";
+import { useDispatch } from "react-redux";
 
 const useStyles = makeStyles(theme => ({
   formItemLayout: {
@@ -44,6 +45,7 @@ const tailFormItemLayout = {
 
 export default function RegisterPage(props) {
   const classes = useStyles();
+  const dispatch = useDispatch();
 
   return (
     <Formik
@@ -77,9 +79,13 @@ export default function RegisterPage(props) {
 
           console.log(dataToSubmit);
 
-          axios.post(API.REGISTER_USER_URL, dataToSubmit).then(response => {
-            if (response.payload.success) {
-              props.history.push("/home");
+          dispatch.registerUser(dataToSubmit).then(response => {
+            if (response.payload.isAuth) {
+              if(response.payload.userData && response.payload.userData.role == "user") {
+                props.history.push("/home/user");
+              } else if(response.payload.userData && response.payload.userData.role == "owner") {
+                props.history.push("/home/owner");
+              }
             } else {
               alert(response.payload.err.errmsg);
             }

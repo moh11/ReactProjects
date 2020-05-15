@@ -1,10 +1,9 @@
 import React from "react";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import "antd/dist/antd.css";
-import "./LoginPage.css";
+import "./styles/LoginPage.css";
 import { Form, Input, Button } from "antd";
-import { loginUser } from "../../../actions/actions";
+import { loginUser } from "../../state/authActions.js";
 import { useDispatch } from "react-redux";
 
 const formItemLayout = {
@@ -56,8 +55,12 @@ export default function RegisterPage(props) {
           };
 
           dispatch(loginUser(dataToSubmit)).then(response => {
-            if (response.payload.success) {
-              props.history.push("/login");
+            if (response.payload.isAuth) {
+              if(response.payload.userData && response.payload.userData.role == "user") {
+                props.history.push("/home/user");
+              } else if(response.payload.userData && response.payload.userData.role == "owner") {
+                props.history.push("/home/owner");
+              }
             } else {
               alert(response.payload.err.errmsg);
             }
