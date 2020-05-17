@@ -79,11 +79,12 @@ export default function RegisterPage(props) {
 
           console.log(dataToSubmit);
 
-          dispatch.registerUser(dataToSubmit).then(response => {
-            if (response.payload.isAuth) {
-              if(response.payload.userData && response.payload.userData.role == "user") {
+          dispatch(registerUser(dataToSubmit)).then(response => {
+            if (response.payload.user && response.payload.token) {
+              localStorage.setItem("token", response.payload.token);
+              if(response.payload.user && response.payload.user.role === "user") {
                 props.history.push("/home/user");
-              } else if(response.payload.userData && response.payload.userData.role == "owner") {
+              } else if(response.payload.user && response.payload.user.role === "owner") {
                 props.history.push("/home/owner");
               }
             } else {

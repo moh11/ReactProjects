@@ -11,6 +11,7 @@ function NavBar(props) {
 
   const logoutHandler = () => {
     dispatch(logoutUser()).then(response => {
+      localStorage.setItem("token", "");
       if (!response.isAuth) {
         props.history.push("/login");
       } else {

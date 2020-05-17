@@ -89,3 +89,5 @@ class RestaurantDetailPage extends React.Component {
 RestaurantDetailPage.propTypes = {
   id: PropTypes.string.isRequired
 };
+
+export default RestaurantDetailPage;

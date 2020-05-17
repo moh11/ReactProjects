@@ -13,7 +13,7 @@ export function registerUser(dataToSubmit){
 }
 
 export function loginUser(dataToSubmit){
-    const request = axios.post(API.LOGIN_USER_URL, dataToSubmit)
+    const payload = axios.post(API.LOGIN_USER_URL, dataToSubmit)
                 .then(response => response.data);
 
     return {
