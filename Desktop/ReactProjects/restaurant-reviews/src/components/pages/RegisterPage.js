@@ -2,13 +2,13 @@ import "antd/dist/antd.css";
 import React from "react";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import { API } from "../../../utils/config.js";
-import { registerUser } from "../../state/authActions.js";
+import axios from "axios";
 import { Form, Input, Button } from "antd";
 import { makeStyles } from "@material-ui/core/styles";
 import MenuItem from "@material-ui/core/MenuItem";
 import Select from "@material-ui/core/Select";
-import { useDispatch } from "react-redux";
+import { API } from "../../utils/config.js";
+import Auth from "../../middleware/auth.js";
 
 const useStyles = makeStyles(theme => ({
   formItemLayout: {
@@ -45,7 +45,6 @@ const tailFormItemLayout = {
 
 export default function RegisterPage(props) {
   const classes = useStyles();
-  const dispatch = useDispatch();
 
   return (
     <Formik
@@ -77,20 +76,20 @@ export default function RegisterPage(props) {
             role: values.role
           };
 
-          console.log(dataToSubmit);
-
-          dispatch(registerUser(dataToSubmit)).then(response => {
-            if (response.payload.user && response.payload.token) {
-              localStorage.setItem("token", response.payload.token);
-              if(response.payload.user && response.payload.user.role === "user") {
+          axios.post(API.REGISTER_USER_URL, dataToSubmit).then(response => {
+            if (response.data) {
+              Auth.authenticate(response.data.token, response.data.user._id, response.data.user.role);
+              if(Auth.getRole() === "user") {
                 props.history.push("/home/user");
-              } else if(response.payload.user && response.payload.user.role === "owner") {
+              } else if(Auth.getRole() === "owner") {
                 props.history.push("/home/owner");
               }
             } else {
-              alert(response.payload.err.errmsg);
+              alert("Unable to register");
             }
-          });
+         }, errors => {
+          alert("Unable to register");
+         });
 
           setSubmitting(false);
         }, 500);

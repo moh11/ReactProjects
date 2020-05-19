@@ -4,18 +4,10 @@ import App from "./components/App";
 import * as serviceWorker from "./serviceWorker";
 import { BrowserRouter } from "react-router-dom";
 
-import rootReducer from "./state/rootReducer.js";
-import { Provider } from "react-redux";
-import { createStore } from "redux";
-
-const token = localStorage.getItem("token")
-
 ReactDOM.render(
-  <Provider store={createStore(rootReducer, { token: token })}>
       <BrowserRouter>
           <App />
       </BrowserRouter>
-  </Provider>
   , document.getElementById('root'));
 
 //ReactDOM.render(<Reply />, document.getElementById("root"));

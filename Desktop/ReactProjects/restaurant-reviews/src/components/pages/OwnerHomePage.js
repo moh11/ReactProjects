@@ -3,13 +3,13 @@ import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
 import Tabs from "@material-ui/core/Tabs";
+import axios from "axios";
 import Tab from "@material-ui/core/Tab";
-import Typography from "@material-ui/core/Typography";
-import Box from "@material-ui/core/Box";
 import RestaurantList from "../compounds/RestaurantList";
 import { API } from "../../utils/config";
 import  ReviewAndReplyList from "../compounds/ReviewAndReplyList";
 import CreateRestaurant from "../compounds/CreateRestaurant";
+import Auth from "../../middleware/auth";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -18,15 +18,9 @@ function TabPanel(props) {
     <div
       role="tabpanel"
       hidden={value !== index}
-      id={`nav-tabpanel-${index}`}
-      aria-labelledby={`nav-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box p={3}>
-          <Typography>{children}</Typography>
-        </Box>
-      )}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}>
     </div>
   );
 }
@@ -34,106 +28,121 @@ function TabPanel(props) {
 TabPanel.propTypes = {
   children: PropTypes.node,
   index: PropTypes.any.isRequired,
-  value: PropTypes.any.isRequired
+  value: PropTypes.any.isRequired,
 };
-
-function LinkTab(props) {
-  return (
-    <Tab
-      component="a"
-      onClick={event => {
-        event.preventDefault();
-        props.onClick();
-      }}
-      {...props}
-    />
-  );
-}
 
 const useStyles = makeStyles(theme => ({
   root: {
     flexGrow: 1,
-    backgroundColor: theme.palette.background.paper
+    backgroundColor: theme.palette.background.paper,
+    marginLeft: "10%"
   }
 }));
 
-export default class OwnerHomePage extends React.Component {
-  constructor() {
-    this.state = {
-      pendingReviews: [],
-      ownedRestaurants: []
-    }
-    this.handlePostReply = this.handlePostReply.bind(this);
-    this.handleOwnedRestaurantTabClick = this.handleOwnedRestaurantTabClick.bind(this);
-    this.handlePendingRepliesTabClick = this.handlePendingRepliesTabClick.bind(this);
-  }
+export default function OwnerHomePage(props) {
+  const classes = useStyles();
+  
+  const [pendingReviews,setPendingReviewsState] = React.useState([]);
+  const [ownedRestaurants, setOwnedRestaurants] = React.useState([]);
+  const [activeTabIndex, setActiveTabIndex] = React.useState(0);
 
-  componentDidMount() {
+  React.useEffect( () => {
     fetchOwnedRestaurantList();
-  }
+  }, []);
 
-  fetchOwnedRestaurantList() {
-    axios.get(API.FETCH_OWNED_RESTAURANTS_URL).then(response => {
-      if(response.data) {
-        this.setState = {
-          restaurants: response.data.restaurants
-        };
+  const fetchOwnedRestaurantList = () => {
+    axios.get(API.FETCH_OWNED_RESTAURANTS_URL, {
+      headers: {
+          'authorization': "Bearer " + Auth.getToken(),
+          'Accept' : 'application/json',
+          'Content-Type': 'application/json'
       }
+  }).then(response => {
+      if(response.data) {
+        setOwnedRestaurants(response.data.restaurants);
+      }
+    }, error => {
+      console.log("Could not fetch restaurants list");
     });
   }
 
-  fetchPendingReviewsList() {
-    axios.get(API.FETCH_REVIEWS_WITH_PENDING_REPLIES_URL).then(response => {
-      if(response.data) {
-        this.setState = {
-          restaurants: response.data.restaurants
-        };
+  const fetchPendingReviewsList = () => {
+    axios.get(API.FETCH_REVIEWS_WITH_PENDING_REPLIES_URL, {
+      headers: {
+          'authorization': "Bearer " + Auth.getToken(),
+          'Accept' : 'application/json',
+          'Content-Type': 'application/json'
       }
+  }).then(response => {
+      if(response.data) {
+        setPendingReviewsState(response.data.reviews);
+      }
+    }, error => {
+      console.log("Could not fetch pending reviews");
     });
   }
 
-  handlePostReply(reply) {
-    await axios.post(API.POST_REPLY, reply).then(response => {
-      if(response.data && response.data.success) {
-        this.fetchPendingReviewsList()
+  const handlePostReply = (reply, reviewId, restaurantId) => {
+    const dataToSubmit = {
+      reviewId: reviewId,
+      message: reply,
+      restaurantId: restaurantId
+    };
+
+    if(!reply || reply.length === 0) {
+      alert("Reply can't be blank");
+      return;
+    }
+
+    axios.post(API.POST_REPLY, dataToSubmit, {
+      headers: {
+          'authorization': "Bearer " + Auth.getToken(),
+          'Accept' : 'application/json',
+          'Content-Type': 'application/json'
+      }
+  }).then(response => {
+      if(response.data) {
+        fetchPendingReviewsList();
       } else {
         alert("Posting reply unsuccessful");
       }
+    }, error => {
+      alert("Posting reply unsuccessful");
     });
   }
 
-  handleOwnedRestaurantTabClick() {
-    this.fetchOwnedRestaurantList();
+  const handleTabChange = (event, value) => {
+    setActiveTabIndex(value);
+    if(value === 0) {
+      fetchOwnedRestaurantList();
+    } else if(value === 1) {
+      fetchPendingReviewsList();
+    }
   }
 
-  handlePendingRepliesTabClick() {
-    this.fetchPendingReviewsList();
-  }
-
-  render() {
-    return (
-    <div className={classes.root}>
+  return (
+    <div>
       <AppBar position="static">
         <Tabs
           variant="fullWidth"
-          value={value}
-          onChange={handleChange}
+          value={activeTabIndex}
+          onChange={handleTabChange}
           aria-label="Tabs for owner"
         >
-          <LinkTab label="View Your Restaurants" onClick={this.handleOwnedRestaurantTabClick}/>
-          <LinkTab label="Replies pending for left comments" onClick={this.handlePendingRepliesTabClick}/>
+          <Tab label="View Your Restaurants" />
+          <Tab label="Replies pending for left comments" />
+          <Tab label="Create a restaurant" />
         </Tabs>
       </AppBar>
-      <TabPanel value={value} index={0}>
-        <RestaurantList restaurants={restaurants}/>
-      </TabPanel>
-      <TabPanel value={value} index={1}>
-        <ReviewAndReplyList reviews={pendingReviews} showReplied={false} handlePostReply={this.handlePostReply}/>
-      </TabPanel>
-      <TabPanel value={value} index={1}>
-        <CreateRestaurant />
-      </TabPanel>
+      { activeTabIndex === 0 &&
+        <RestaurantList restaurants={ownedRestaurants} className={classes.root}/>
+      }
+      { activeTabIndex === 1 &&
+        <ReviewAndReplyList reviews={pendingReviews} showOnlyPendingReplies={true} showReplies={true} handleClick={handlePostReply}/>
+      }
+      { activeTabIndex === 2 &&
+        <CreateRestaurant props={activeTabIndex}/>
+      }
     </div>
-    );
-  }
+  );
 }

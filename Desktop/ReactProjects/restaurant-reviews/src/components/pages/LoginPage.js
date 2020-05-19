@@ -2,9 +2,11 @@ import React from "react";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import "./styles/LoginPage.css";
+import axios from "axios";
 import { Form, Input, Button } from "antd";
-import { loginUser } from "../../state/authActions.js";
-import { useDispatch } from "react-redux";
+import { API } from "../../utils/config";
+import Auth from "../../middleware/auth";
+import { Redirect } from "react-router-dom";
 
 const formItemLayout = {
   labelCol: {
@@ -30,8 +32,7 @@ const tailFormItemLayout = {
   }
 };
 
-export default function RegisterPage(props) {
-  const dispatch = useDispatch();
+export default function LoginPage(props) {
 
   return (
     <Formik
@@ -54,16 +55,19 @@ export default function RegisterPage(props) {
             password: values.password
           };
 
-          dispatch(loginUser(dataToSubmit)).then(response => {
-            if (response.payload.isAuth) {
-              if(response.payload.userData && response.payload.userData.role == "user") {
-                props.history.push("/home/user");
-              } else if(response.payload.userData && response.payload.userData.role == "owner") {
-                props.history.push("/home/owner");
+          axios.post(API.LOGIN_USER_URL, dataToSubmit, ).then(response => {
+            if (response.data) {
+              Auth.authenticate(response.data.token);
+              if(Auth.getRole() === "user") {
+                props.history.push("home/user");
+              } else if(Auth.getRole() === "owner") {
+                props.history.push("home/owner");
               }
             } else {
-              alert(response.payload.err.errmsg);
+              alert("Unable to login");
             }
+          }, errors => {
+            alert("Unable to login");
           });
 
           setSubmitting(false);

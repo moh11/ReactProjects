@@ -1,21 +1,37 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/core/styles";
 import Card from "@material-ui/core/Card";
-import CardHeader from "@material-ui/core/CardHeader";
-import CardMedia from "@material-ui/core/CardMedia";
+import CardActions from "@material-ui/core/CardActions";
 import CardContent from "@material-ui/core/CardContent";
+import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import Rating from "@material-ui/lab/Rating";
+import { Redirect } from "react-router-dom";
 
 const useStyles = makeStyles(theme => ({
-  root: {},
-  media: {
-    height: 0,
-    paddingTop: "56.25%" // 16:9
+  filter_by: {
+    display: "flex",
+    flexDirection: "row"
+  },
+  root: {
+    width: "90%",
+    minWidth: 275
+  },
+  title: {
+    fontSize: 14
+  },
+  pos: {
+    marginBottom: 12
   },
   rate: {
-    marginLeft: "10"
+    display: "inline",
+    float: "right"
+  },
+  detailsButton: {
+    backgroundColor: "red",
+    float: "right",
+    cursor: "pointer"
   }
 }));
 
@@ -45,28 +61,62 @@ function RestaurantRating(props) {
 export default function RestaurantCard(props) {
   const classes = useStyles();
 
+  // state variables
+  const [redirect, setRedirect] = useState(false);
+
+  // constants
+  const restaurantRating = props.rating ? props.rating : 0.0;
+  const restaurantId = (props.restaurant && props.restaurant._id) ? props.restaurant._id : "";
+  const redirectLink = "/restaurant/details/" + restaurantId;
+
+  // Go to details page
+  const handleClick = () => {
+    setRedirect(true);
+  }
+
+  const renderRedirect = () => {
+    if (redirect) {
+      return <Redirect to={redirectLink} />
+    }
+  }
+
   return (
     <Card className={classes.root}>
-      <CardHeader title={props.title} />
-      <RestaurantRating rating={props.rating} classes={classes} />
-      <CardMedia className={classes.media} image={props.image} />
       <CardContent>
-        <Typography variant="body2" color="textSecondary" component="p">
-          {props.description}
+        <div className={classes.rate}>
+          <RestaurantRating classes={classes} rating={restaurantRating} />
+        </div>
+        <Typography variant="h5" component="h4">
+        {props.restaurant && props.restaurant.name ? props.restaurant.name : ""}
+        </Typography>
+        <Typography
+          className={classes.title}
+          color="textSecondary"
+          gutterBottom
+        >
+          {props.restaurant && props.restaurant.address ? props.restaurant.address : ""}
+        </Typography>
+        <Typography variant="body2" component="p">
+        {props.restaurant && props.restaurant.description ? props.restaurant.description : ""}
         </Typography>
       </CardContent>
+      <CardActions>
+        {renderRedirect()}
+        {props.dontShowClickButton ? <div /> :
+        <Button size="small" className={classes.detailsButton} onClick={handleClick}>
+          RESTAURANT DETAILS
+        </Button>}
+      </CardActions>
     </Card>
   );
 }
 
-RestaurantCard.propTyes = {
-  title: PropTypes.string.isRequired,
-  image: PropTypes.string,
-  description: PropTypes.string.isRequired,
-  rating: PropTypes.float
-};
+RestaurantCard.propTypes = {
+  restaurant: PropTypes.object,
+  dontShowClickButton: PropTypes.bool
+}
 
 RestaurantCard.defaultProps = {
-  image: "/static/images/cards/paella.jpg",
-  rating: 0.0
-};
+  restaurant: {},
+  dontShowClickButton: false
+}

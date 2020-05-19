@@ -1,17 +1,22 @@
-import { Route } from "react-router-dom";
-import { useSelector } from "react-redux";
+import React from "react";
+import { Route, Redirect } from "react-router-dom";
+import Auth from "./auth";
 
-// const PrivateRoute = ({ component: Component, ...rest }) => (
-//   <Route {...rest} render={(props) => (
-//     fakeAuth.isAuthenticated === true
-//       ? <Component {...props} />
-//       : <Redirect to={{
-//           pathname: '/login',
-//           state: { from: props.location }
-//         }} />
-//   )} />
-// )
+const PrivateRoute = ({ component: Component, role, ...rest }) => (
+    <Route
+      {...rest}
+      render={props =>
+        ((Auth.isAuthenticated() === true && ( role === "any" || Auth.getRole() === role)) ? (
+          <Component {...props} />
+        ) : (
+          <Redirect
+            to={{
+              pathname: "/"
+            }}
+          />
+        ))
+      }
+    />
+);
 
-// export default PrivateRoute;
-
-
+export default PrivateRoute;

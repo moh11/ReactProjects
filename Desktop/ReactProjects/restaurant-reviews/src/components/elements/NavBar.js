@@ -1,26 +1,17 @@
 import "./styles/Navbar.css";
 import React from "react";
-import { useSelector, useDispatch } from "react-redux";
 import { withRouter } from "react-router-dom";
 import { Menu } from "antd";
-import { logoutUser } from "../../state/authActions.js";
+import Auth from "../../middleware/auth";
 
 function NavBar(props) {
-  const userData = useSelector(state => state.userData);
-  const dispatch = useDispatch();
 
   const logoutHandler = () => {
-    dispatch(logoutUser()).then(response => {
-      localStorage.setItem("token", "");
-      if (!response.isAuth) {
-        props.history.push("/login");
-      } else {
-        alert("Log Out Failed");
-      }
-    });
+    Auth.signout();
+    props.history.push("/login");
   };
 
-  if (!userData || !userData.isAuth) {
+  if (!Auth.isAuthenticated()) {
     return (
       <div className="menu__container">
         <div className="menu_right">
@@ -36,8 +27,23 @@ function NavBar(props) {
       </div>
     );
   } else {
+
+    const role = Auth.getRole();
+
     return (
       <div className="menu__container">
+        <div className="menu_left">
+        <Menu mode="horizontal">
+          <Menu.Item key="home">
+            { role === "owner" &&
+            <a href="/home/owner">Home</a>
+            }
+            { role === "user" &&
+             <a href="/home/user">Home</a>
+            }
+          </Menu.Item>
+        </Menu>
+        </div>
         <div className="menu_right">
           <Menu mode="horizontal">
             <Menu.Item key="logout">

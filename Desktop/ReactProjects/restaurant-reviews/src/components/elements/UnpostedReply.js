@@ -10,7 +10,14 @@ const useStyles = makeStyles(theme => ({
     "& .MuiTextField-root": {
       margin: theme.spacing(1),
       width: "90%"
-    }
+    },
+    marginLeft: "10%"
+  },
+  rate: {
+    marginTop: "10px",
+    marginBottom: "10px",
+    display: "flex",
+    flexDirection: "row"
   },
   button: {
     display: "block",
@@ -18,21 +25,40 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export default function UnpostedReview() {
+export default function UnpostedReply(props) {
   const classes = useStyles();
+
+  // State
+  const [reviewMessage, setReviewMessage] = React.useState("");
+
+  // State change handlers
+  const handleTextChange = message => {
+    setReviewMessage(message.target.value);
+  };
 
   return (
     <div className={classes.root}>
       <TextField
         id="outlined-multiline-static"
-        label="Post Your Review....."
+        label="Post Your Reply....."
         multiline
         rows={4}
         variant="outlined"
+        onChange={handleTextChange}
       />
-      <Button variant="contained" color="primary" className={classes.button}>
+      <Button variant="contained" color="primary" className={classes.button} onClick={() => props.handleClick(reviewMessage, props.reviewId, props.restaurantId)}>
         POST REPLY
       </Button>
     </div>
   );
 }
+
+UnpostedReply.propTyes = {
+  reviewId: PropTypes.string,
+  restaurantId: PropTypes.string
+};
+
+UnpostedReply.defaultProps = {
+  reviewId: "",
+  restaurantId: ""
+};

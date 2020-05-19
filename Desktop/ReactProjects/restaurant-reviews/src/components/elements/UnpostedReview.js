@@ -30,25 +30,25 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export default function UnpostedReview() {
+export default function UnpostedReview(props) {
   const classes = useStyles();
 
   // State
   const [reviewMessage, setReviewMessage] = React.useState("");
-  const [dateOfVisit, setDateOfVisit] = React.useState(new Date());
+  const [selectedDate, setSelectedDate] = React.useState(new Date("2020-05-05T21:11:54"));
   const [rating, setRating] = React.useState(3.0);
 
   // State change handlers
-  const handleRatingChange = givenRating => {
-    setRating(givenRating);
+  const handleTextChange = message => {
+    setReviewMessage(message.target.value);
+  };
+
+  const handleRatingChange = rating => {
+    setRating(parseFloat(rating.target.value));
   };
 
   const handleDateChange = date => {
-    setDateOfVisit(date);
-  };
-
-  const handlePostReviewClick = e => {
-    console.log(e);
+    setSelectedDate(date);
   };
 
   return (
@@ -59,21 +59,21 @@ export default function UnpostedReview() {
         multiline
         rows={4}
         variant="outlined"
+        onChange={handleTextChange}
       />
       <MuiPickersUtilsProvider utils={DateFnsUtils}>
-        <KeyboardDatePicker
-          margin="normal"
-          id="date-picker-inline"
-          label="Date of visit"
-          format="MM/dd/yyyy"
-          value={dateOfVisit}
-          onChange={handleDateChange}
-          KeyboardButtonProps={{
-            "aria-label": "change date"
-          }}
-          maxDate={new Date()}
-        />
-      </MuiPickersUtilsProvider>
+      <KeyboardDatePicker
+        margin="normal"
+        id="date-picker-dialog"
+        label="Date picker dialog"
+        format="MM/dd/yyyy"
+        value={selectedDate}
+        onChange={handleDateChange}
+        KeyboardButtonProps={{
+          "aria-label": "change date"
+        }}
+      />
+    </MuiPickersUtilsProvider>
       <Rating
         name="simple-controlled"
         className={classes.rate}
@@ -81,9 +81,14 @@ export default function UnpostedReview() {
         precision={0.5}
         onChange={handleRatingChange}
       />
-      <Button variant="contained" color="primary" className={classes.button}>
+      <Button variant="contained" color="primary" className={classes.button} onClick={() => props.handleClick(reviewMessage, rating, selectedDate)}>
         POST REVIEW
       </Button>
     </div>
   );
 }
+
+// Uses parent component handler
+UnpostedReview.propTyes = {
+  handleClick: PropTypes.func
+};

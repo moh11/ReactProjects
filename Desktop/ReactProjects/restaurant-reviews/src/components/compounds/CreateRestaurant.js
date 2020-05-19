@@ -1,21 +1,13 @@
 import React, { useState } from "react";
 import { Formik } from "formik";
+import TextField from "@material-ui/core/TextField";
 import * as Yup from "yup";
 import "antd/dist/antd.css";
-import "./CreateOrEditRestaurant.css";
+import axios from "axios";
+import "./styles/CreateRestaurant.css";
 import { Form, Input, Button } from "antd";
-import { useDispatch } from "react-redux";
-
-const formItemLayout = {
-  labelCol: {
-    xs: { span: 24 },
-    sm: { span: 8 }
-  },
-  wrapperCol: {
-    xs: { span: 24 },
-    sm: { span: 16 }
-  }
-};
+import { API } from "../../utils/config";
+import Auth from "../../middleware/auth";
 
 const tailFormItemLayout = {
   wrapperCol: {
@@ -31,22 +23,14 @@ const tailFormItemLayout = {
 };
 
 export default function CreateRestaurant(props) {
-  const [submitResultMessage, setSubmitResultMessage] = useState("");
+  const [submitSuccessMessage, setSubmitSuccessMessage] = useState("");
+  const [submitErrorMessage, setSubmitErrorMessage] = useState("");
   console.log(props);
-
-  const dispatch = useDispatch();
 
   const canEdit = props.canEdit;
   const header = props.header;
   const subHeader = props.subHeader;
 
-  const handleCreateRestaurant = values => {
-    return {};
-  };
-
-  const handleEditRestaurant = values => {
-    return {};
-  };
 
   const restaurantIdFormItem = props => {
     console.log(props);
@@ -74,22 +58,6 @@ export default function CreateRestaurant(props) {
     }
   };
 
-  const validateForm = values => {
-    console.log("validating");
-    const errors = {};
-
-    if (!values.restaurantId) {
-      if (!values.restaurantName) {
-        errors.restaurantName = "Required";
-      }
-      if (!values.restaurantDescription) {
-        errors.restaurantDescription = "Required";
-      }
-    }
-
-    return errors;
-  };
-
   return (
     <Formik
       initialValues={{
@@ -97,34 +65,38 @@ export default function CreateRestaurant(props) {
         restaurantAddress: "",
         restaurantDescription: ""
       }}
-      validate={validateForm}
+      validationSchema={Yup.object().shape({
+        restaurantName: Yup.string()
+          .required("Restaurant name is required"),
+        restaurantDescription: Yup.string()
+          .required("Restaurant description is required")
+      })}
       onSubmit={(values, { setSubmitting }) => {
         setTimeout(() => {
-          console.log("in submit fn");
-          var messageToShow = "";
-          var actionFunc = () => {};
-          if (values.restaurantId) {
-            messageToShow = "Restaurant has been created successfully";
-            actionFunc = handleEditRestaurant;
-          } else {
-            messageToShow = "Restaurant has been edited successfully";
-            actionFunc = handleCreateRestaurant;
-          }
-
           let dataToSubmit = {
-            restaurant_id: values.restaurantId,
-            restaurant_name: values.restaurantName,
-            restaurant_address: values.restaurantAddress,
-            restaurant_description: values.restaurantDescription
+            name: values.restaurantName,
+            address: values.restaurantAddress,
+            description: values.restaurantDescription
           };
 
-          // actionFunc(dataToSubmit).then(response => {
-          //   if (response.payload.success) {
-          // setSubmitResultMessage(messageToShow);
-          //   } else {
-          alert("response.payload.err.errmsg");
-          //   }
-          // });
+          console.log(dataToSubmit);
+
+          axios.post(API.CREATE_RESTAURANT_URL, dataToSubmit, {
+            headers: {
+                'authorization': "Bearer " + Auth.getToken(),
+                'Accept' : 'application/json',
+                'Content-Type': 'application/json'
+            }
+          }).then(response => {
+            if(response.data) {
+              setSubmitSuccessMessage("Restaurant was created successfully!");
+            } else {
+              setSubmitErrorMessage("Restaurant was not created");
+              alert("Restaurant wasn't created");
+            }
+          }, errors => {
+            alert("Restaurant wasn't created");
+          });
 
           setSubmitting(false);
         }, 500);
@@ -146,10 +118,13 @@ export default function CreateRestaurant(props) {
             <h4>
               <i>{subHeader}</i>
             </h4>
-            <Form style={{ maxWidth: "375px" }} {...formItemLayout}>
+            <Form>
               {restaurantIdFormItem(props)}
 
-              <Form.Item label="Restaurant">
+              <Form.Item required label="Name" hasFeedback
+                validateStatus={
+                  errors.restaurantName && touched.restaurantName ? "error" : "success"
+                }>
                 <Input
                   id="restaurantName"
                   placeholder="Enter your restaurant name"
@@ -189,20 +164,25 @@ export default function CreateRestaurant(props) {
                 )}
               </Form.Item>
 
-              <Form.Item label="Description">
-                <Input
-                  id="restaurantDescription"
-                  placeholder="Describe your restaurant"
-                  type="text"
-                  value={values.restaurantDescription}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={
-                    errors.restaurantDescription &&
-                    touched.restaurantDescription
-                      ? "text-input error"
-                      : "text-input"
-                  }
+              <Form.Item required styles={{width: "100%"}} label="Description" hasFeedback
+                validateStatus={
+                  errors.restaurantDescription && touched.restaurantDescription ? "error" : "success"
+                }>
+              <TextField
+                id="restaurantDescription"
+                label="Describe your restaurant....."
+                multiline
+                rows={8}
+                variant="outlined"
+                value={values.restaurantDescription}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={
+                  errors.restaurantDescription &&
+                  touched.restaurantDescription
+                    ? "text-input error"
+                    : "text-input"
+                }
                 />
                 {errors.restaurantDescription &&
                   touched.restaurantDescription && (
@@ -215,13 +195,6 @@ export default function CreateRestaurant(props) {
               <Form.Item {...tailFormItemLayout}>
                 <Button
                   type="primary"
-                  className="button-details"
-                  disabled={isSubmitting}
-                >
-                  Details
-                </Button>
-                <Button
-                  type="primary"
                   className="button-submit"
                   disabled={isSubmitting}
                   onClick={handleSubmit}
@@ -230,7 +203,8 @@ export default function CreateRestaurant(props) {
                 </Button>
               </Form.Item>
             </Form>
-            <div>{submitResultMessage}</div>
+            <div styles={{color: "green"}}>{submitSuccessMessage}</div>
+            <div styles={{color: "red"}}>>{submitErrorMessage}</div>
           </div>
         );
       }}

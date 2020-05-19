@@ -1,14 +1,14 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/core/styles";
 import Card from "@material-ui/core/Card";
-import CardActions from "@material-ui/core/CardActions";
 import CardContent from "@material-ui/core/CardContent";
-import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import Rating from "@material-ui/lab/Rating";
 
 const useStyles = makeStyles({
   root: {
+    width: "90%",
     minWidth: 275
   },
   title: {
@@ -28,86 +28,43 @@ const useStyles = makeStyles({
   }
 });
 
-export default function Comment() {
+export default function Review(props) {
   const classes = useStyles();
-
-  const dummyComments = [
-    {
-      user: {
-        name: "Vicktor",
-        email: "vicktor.is.great@hotmail.com",
-        role: "owner"
-      },
-      rating: 1.5,
-      review_date: "2020-03-04",
-      review: "This is a great restaurant, must try"
-    },
-    {
-      user: {
-        name: "Vicktor",
-        email: "vicktor.is.great@hotmail.com",
-        role: "owner"
-      },
-      rating: 3,
-      review_date: "2020-03-04",
-      review:
-        "This is a great restaurant, must try This is a great restaurant, must try This is a great restaurant, must try This is a great restaurant, must try This is a great restaurant, must try This is a great restaurant, must try This is a great restaurant, must try This is a great restaurant, must try"
-    }
-  ];
-
-  /* Child Components */
-  const replyButton_CC = comment => {
-    console.log(comment.user.role);
-    if (comment.user.role === "owner") {
-      return <input type="button" class="reply_button" value="Reply" />;
-    }
-  };
-
-  const deleteButton_CC = comment => {
-    if (comment.user.role === "owner") {
-      return (
-        <div>
-          <input type="button" class="reply_button" value="Delete" />
-        </div>
-      );
-    }
-  };
 
   return (
     <Card className={classes.root}>
       <CardContent>
         <div className={classes.rate}>
+          { props.review.rating &&
           <Rating
             name="half-rating-read"
-            defaultValue={3}
+            value={props.review.rating}
             precision={0.5}
-            readOnly
-          />
+            readOnly 
+          />}
         </div>
         <Typography variant="h5" component="h4">
-          Sandy Sand
+          {props.review.name}
         </Typography>
         <Typography
           className={classes.title}
           color="textSecondary"
           gutterBottom
         >
-          2020-05-12
+          Visited <b>{props.review && props.review.restaurantName ? props.review.restaurantName : ""}</b> on: {new Date(props.review.dateOfVisit).toLocaleDateString("en-US")}
         </Typography>
         <Typography variant="body2" component="p">
-          well meaning and kindly.
-          <br />
-          {'"a benevolent smile"'}
+          {props.review.message}
         </Typography>
       </CardContent>
-      <CardActions>
-        <Button size="small" className={classes.deleteButton}>
-          RESTAURANT DETAILS
-        </Button>
-        <Button size="small" className={classes.deleteButton}>
-          DELETE
-        </Button>
-      </CardActions>
     </Card>
   );
 }
+
+Review.propTyes = {
+  review: PropTypes.object
+};
+
+Review.defaultProps = {
+  review: {}
+};
